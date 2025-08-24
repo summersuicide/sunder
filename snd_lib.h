@@ -2,25 +2,6 @@
 
 #include <iostream>
 
-//#define SUNDER_USING_PRIMITIVE_TYPES \
-//															using sunder::i8;\
-//															using sunder::i16;\
-//															using sunder::i32;\
-//															using sunder::i64;\
-//															using sunder::u8;\
-//															using sunder::u16;\
-//															using sunder::u32;\
-//															using sunder::u64;\
-//															using sunder::f32;\
-//															using sunder::f64;\
-//															using sunder::b8;\
-//															using sunder::b16;\
-//															using sunder::b32;\
-//															using sunder::b64;\
-//															using sunder::cstring_literal;\
-//															using sunder::cstring;\
-
-
 #define SUNDER_TRUE 1
 #define SUNDER_FALSE 0
 #define SUNDER_ERROR_NULLPTR -3
@@ -150,7 +131,8 @@ struct sunder_arena_t
 	u64 capacity = 0;
 	u64 offset = 0;
 	u64 total_bytes_of_padding = 0;
-	sunder_arena_t* chain = nullptr;;
+	sunder_arena_t* chain = nullptr;
+	u64* chain_allocation_size_buffer = nullptr;
 	u32 chain_count = 0;
 	sunder_arena_type type = ARENA_TYPE_STATIC;
 };
