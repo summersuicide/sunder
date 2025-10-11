@@ -1,371 +1,539 @@
 #include "snd_lib.h"
 #include <ctime>
 
-//namespace sunder
-//{
-	void* sunder_halloc(u64 type_size_in_bytes, u64 element_count)
+void* sunder_halloc(u64 type_size_in_bytes, u64 element_count)
+{
+	if (element_count > 0)
 	{
-		if (element_count > 0)
-		{
-			void* memblock = malloc(type_size_in_bytes * element_count);
-			if (memblock == NULL) memblock = nullptr;
-			return memblock;
-		}
-
-		return nullptr;
-	}
-
-	void* sunder_halloc(u64 bytes)
-	{
-		if (bytes > 0)
-		{
-			void* memblock = malloc(bytes);
-			if (memblock == NULL) memblock = nullptr;
-			return memblock;
-		}
-
-		return nullptr;
-	}
-
-	void* sunder_aligned_halloc(u64 type_size_in_bytes, u64 element_count, u64 alignment)
-	{
-		if (type_size_in_bytes ==  0 || alignment == 0 || element_count == 0) { return nullptr; }
-
-		void* memblock = _aligned_malloc(type_size_in_bytes * element_count, alignment);
-		if (memblock == NULL) { memblock = nullptr; }
-		
+		void* memblock = malloc(type_size_in_bytes * element_count);
+		if (memblock == NULL) memblock = nullptr;
 		return memblock;
 	}
 
-	void* sunder_aligned_halloc(u64 bytes, u64 alignment)
+	return nullptr;
+}
+
+void* sunder_halloc(u64 bytes)
+{
+	if (bytes > 0)
 	{
-		if (bytes < 0 || alignment == 0) { return nullptr; }
-
-		void* memblock = _aligned_malloc(bytes, alignment);
-		if (memblock == NULL) { memblock = nullptr; }
-
+		void* memblock = malloc(bytes);
+		if (memblock == NULL) memblock = nullptr;
 		return memblock;
 	}
 
-	void sunder_free(void** memblock)
-	{
-		if (memblock == nullptr) { return; }
+	return nullptr;
+}
 
-		if (*memblock != nullptr)
-		{
-			free(*memblock);
-			*memblock = nullptr;
-		}
-	}
+void* sunder_aligned_halloc(u64 type_size_in_bytes, u64 element_count, u64 alignment)
+{
+	if (type_size_in_bytes ==  0 || alignment == 0 || element_count == 0) { return nullptr; }
 
-	void sunder_aligned_ffree(void** memblock)
-	{
-		if (memblock == nullptr) { return; }
-
-		if (*memblock != nullptr)
-		{
-			_aligned_free(*memblock);
-			*memblock = nullptr;
-		}
-	}
-
-	bool sunder_is_valid(const void* memblock)
-	{
-		return memblock != nullptr;
-	}
-
-	void sunder_rand_seed()
-	{
-		srand((u32)time(0));
-	}
-
-	i16 sunder_rand_s16(i16 start, i16 end)
-	{
-		i16 diapason = end - start;
-
-		return rand() % (diapason + 1) + start;
-	}
-
-	i32 sunder_rand_s32(i32 start, i32 end)
-	{
-		i32 diapason = end - start;
-
-		return rand() % (diapason + 1) + start;
-	}
-
-	i64 sunder_rand_s64(i64 start, i64 end)
-	{
-		i64 diapason = end - start;
-
-		return rand() % (diapason + 1) + start;
-	}
-
-	u16 sunder_rand_u16(u16 start, u16 end)
-	{
-		u16 diapason = end - start;
-
-		return rand() % (diapason + 1) + start;
-	}
-
-	u32 sunder_rand_u32(u32 start, u32 end)
-	{
-		u32 diapason = end - start;
-
-		return rand() % (diapason + 1) + start;
-	}
-
-	u64 sunder_rand_u64(u64 start, u64 end)
-	{
-		u64 diapason = end - start;
-
-		return rand() % (diapason + 1) + start;
-	}
-
-	u64 sunder_copy_buffer(void* bytes_to_copy_to, const void* bytes_to_copy, u64 bytes_to_copy_to_size, u64 bytes_to_copy_size, u64 bytes_to_write)
-	{
-		if (bytes_to_copy_to == nullptr) { return 0; }
-		if (bytes_to_copy == nullptr) { return 0; }
-
-		i8* temp_bytes_to_copy_to = (i8*)bytes_to_copy_to;
-		i8* temp_bytes_to_copy = (i8*)bytes_to_copy;
-
-		if (bytes_to_write > bytes_to_copy_to_size || bytes_to_write > bytes_to_copy_size || bytes_to_write == 0) { return 0; }
-
-			for (u64 i = 0; i < bytes_to_write; i++)
-			{
-				temp_bytes_to_copy_to[i] = temp_bytes_to_copy[i];
-			}
-
-		return bytes_to_write;
-	}
-
-	bool sunder_is_even(u64 val)
-	{
-		return val % 2 == 0;
-	}
-
-	bool sunder_is_power_of_2(u64 val)
-	{
-		return val != 0 && (val & (val - 1)) == 0;;
-	}
-
-	u64 sunder_align64(u64 current_offset, u64 alignment)
-	{
-		return (current_offset + alignment - 1) & ~(alignment - 1);
-	}
-
-	u32 sunder_align32(u32 current_offset, u32 alignment)
-	{
-		return (current_offset + alignment - 1) & ~(alignment - 1);
-	}
-
-	u64 sunder_compute_array_size_in_bytes(u64 type_size_in_bytes, u64 element_count)
-	{
-		return type_size_in_bytes * element_count;
-	}
-
-	bool sunder_is_divisible_by(u64 val, u64 div)
-	{
-		if (div == 0) { return false; }
-
-		return val % div == 0;
-	}
-
-	sunder_arena_suballocation_result_t sunder_suballocate_from_arena_internal(u64* offset, u64* padding, u8* buffer, u64 capacity, u64 bytes, u64 alignment)
-	{
-		sunder_arena_suballocation_result_t res;
-		res.result = ARENA_RESULT_BUFFER_UNINITIALIZED;
-		if (buffer == nullptr) { return res; }
+	void* memblock = _aligned_malloc(type_size_in_bytes * element_count, alignment);
+	if (memblock == NULL) { memblock = nullptr; }
 		
-		u64 aligned_offset = sunder_align64(*offset, alignment);
-		u64 bytes_of_padding = aligned_offset - (*offset);
+	return memblock;
+}
 
-		res.result = ARENA_RESULT_OUT_OF_MEMORY;
-		if (aligned_offset + bytes > capacity) { return res; }
+void* sunder_aligned_halloc(u64 bytes, u64 alignment)
+{
+	if (bytes < 0 || alignment == 0) { return nullptr; }
 
-		(*padding) += bytes_of_padding;
-		void* data = &buffer[aligned_offset];
-		(*offset) = aligned_offset + bytes;
+	void* memblock = _aligned_malloc(bytes, alignment);
+	if (memblock == NULL) { memblock = nullptr; }
 
-		res.result = ARENA_RESULT_SUCCESS;
-		res.data = data;
+	return memblock;
+}
+
+void sunder_free(void** memblock)
+{
+	if (memblock == nullptr) { return; }
+
+	if (*memblock != nullptr)
+	{
+		free(*memblock);
+		*memblock = nullptr;
+	}
+}
+
+void sunder_aligned_free(void** memblock)
+{
+	if (memblock == nullptr) { return; }
+
+	if (*memblock != nullptr)
+	{
+		_aligned_free(*memblock);
+		*memblock = nullptr;
+	}
+}
+
+bool sunder_is_valid(const void* memblock)
+{
+	return memblock != nullptr;
+}
+
+void sunder_rand_seed()
+{
+	srand((u32)time(0));
+}
+
+i16 sunder_rand_i16(i16 start, i16 end)
+{
+	i16 diapason = end - start;
+
+	return rand() % (diapason + 1) + start;
+}
+
+i32 sunder_rand_i32(i32 start, i32 end)
+{
+	i32 diapason = end - start;
+
+	return rand() % (diapason + 1) + start;
+}
+
+i64 sunder_rand_i64(i64 start, i64 end)
+{
+	i64 diapason = end - start;
+
+	return rand() % (diapason + 1) + start;
+}
+
+u16 sunder_rand_u16(u16 start, u16 end)
+{
+	u16 diapason = end - start;
+
+	return rand() % (diapason + 1) + start;
+}
+
+u32 sunder_rand_u32(u32 start, u32 end)
+{
+	u32 diapason = end - start;
+
+	return rand() % (diapason + 1) + start;
+}
+
+u64 sunder_rand_u64(u64 start, u64 end)
+{
+	u64 diapason = end - start;
+
+	return rand() % (diapason + 1) + start;
+}
+
+u64 sunder_copy_buffer(void* dst, const void* src, const sunder_buffer_copy_data_t* copying_data)
+{
+	if (dst == nullptr) { return 0; }
+	if (src == nullptr) { return 0; }
+
+	i8* temp_bytes_to_copy_to = (i8*)dst;
+	i8* temp_bytes_to_copy = (i8*)src;
+
+	if (copying_data->bytes_to_write > copying_data->dst_size || copying_data->bytes_to_write > copying_data->src_size || copying_data->bytes_to_write == 0) { return 0; }
+
+		for (u64 i = 0; i < copying_data->bytes_to_write; i++)
+		{
+			temp_bytes_to_copy_to[i + copying_data->dst_offset] = temp_bytes_to_copy[i + copying_data->src_offset];
+		}
+
+	return copying_data->bytes_to_write;
+}
+
+bool sunder_is_even(u64 val)
+{
+	return val % 2 == 0;
+}
+
+bool sunder_is_power_of_2(u64 val)
+{
+	return val != 0 && (val & (val - 1)) == 0;
+}
+
+u64 sunder_align64(u64 current_offset, u64 alignment)
+{
+	return (current_offset + alignment - 1) & ~(alignment - 1);
+}
+
+u32 sunder_align32(u32 current_offset, u32 alignment)
+{
+	return (current_offset + alignment - 1) & ~(alignment - 1);
+}
+
+u64 sunder_compute_array_size_in_bytes(u64 type_size_in_bytes, u64 element_count)
+{
+	return type_size_in_bytes * element_count;
+}
+
+bool sunder_is_divisible_by(u64 val, u64 div)
+{
+	if (div == 0) { return false; }
+
+	return val % div == 0;
+}
+
+sunder_arena_suballocation_result_t sunder_suballocate_from_arena_internal(sunder_arena_t* arena, u64 bytes, u32 alignment)
+{
+	sunder_arena_suballocation_result_t res;
+	const u64 working_alignment = sunder_clamp_u32(SUNDER_ARENA_SUBALLOCATION_MIN_ALIGNMENT, SUNDER_ARENA_SUBALLOCATION_MAX_ALIGNMENT, alignment);
+
+	const u64 aligned_offset = sunder_align64(arena->offset, working_alignment);
+	const u64 post_suballocation_offset = aligned_offset + bytes;
+
+	res.result = SUNDER_ARENA_RESULT_OUT_OF_ARENA_MEMORY;
+	if (post_suballocation_offset > arena->capacity) { return res; }
+
+	void* data = &arena->buffer[aligned_offset];
+	arena->offset = post_suballocation_offset;
+
+	res.result = SUNDER_ARENA_RESULT_SUCCESS;
+	res.data = data;
+	return res;
+}
+
+sunder_arena_suballocation_result_t sunder_suballocate_from_arena_debug_internal(sunder_arena_t* arena, u64 bytes, u32 alignment)
+{
+	sunder_arena_suballocation_result_t res;
+	res.data = nullptr;
+	
+	const u32 working_alignment = sunder_clamp_u32(SUNDER_ARENA_SUBALLOCATION_MIN_ALIGNMENT, SUNDER_ARENA_SUBALLOCATION_MAX_ALIGNMENT, alignment);
+
+	std::cout << "\n" << arena->offset << "/" << arena->capacity;
+	std::cout << "\nrequested alignment: " << alignment;
+	std::cout << "\nworking alignment: " << working_alignment;
+	std::cout << "\nallocating " << bytes << " bytes";
+	std::cout << "\ncurrent offset: " << arena->offset;
+
+	const u64 aligned_offset = sunder_align64(arena->offset, working_alignment);
+	const u64 bytes_of_padding = aligned_offset - arena->offset;
+	const u64 post_suballocation_offset = aligned_offset + bytes;
+
+	res.result = SUNDER_ARENA_RESULT_OUT_OF_ARENA_MEMORY;
+
+	if (post_suballocation_offset > arena->capacity)
+	{
 		return res;
 	}
 
-	sunder_arena_suballocation_result_t sunder_suballocate_from_arena_internal_debug(u64* offset, u64* padding, u8* buffer, u64 capacity, u64 bytes, u64 alignment)
+	SUNDER_LOG("\ndata assigned offset: ");
+	SUNDER_LOG(aligned_offset);
+	SUNDER_LOG("\nbytes of padding added: ");
+	SUNDER_LOG(bytes_of_padding);
+	SUNDER_LOG("\npost suballocation offset: ");
+	SUNDER_LOG(post_suballocation_offset);
+	SUNDER_LOG("\n");
+
+	void* user_block = &arena->buffer[aligned_offset];
+
+	arena->offset = post_suballocation_offset;
+
+	res.result = SUNDER_ARENA_RESULT_SUCCESS;
+	res.data = user_block;
+
+	return res;
+}
+
+sunder_arena_result sunder_converge_arena_chain_debug(sunder_arena_t* arena)
+{
+	return SUNDER_ARENA_RESULT_SUCCESS;
+}
+
+sunder_arena_result sunder_allocate_arena(sunder_arena_t* arena, u64 capacity, u32 arena_alignment)
+{
+	if (capacity == 0)
 	{
-		sunder_arena_suballocation_result_t res;
-		res.result = ARENA_RESULT_BUFFER_UNINITIALIZED;
-		if (buffer == nullptr) { return res; }
-
-		std::cout << "\n" << *offset << "/" << capacity;
-		std::cout << "\nrequested alignment: " << alignment;
-		std::cout << "\nallocating " << bytes << " bytes";
-		std::cout << "\ncurrent offset: " << *offset;
-		u64 aligned_offset = sunder_align64(*offset, alignment);
-		u64 bytes_of_padding = aligned_offset - (*offset);
-
-		res.result = ARENA_RESULT_OUT_OF_MEMORY;
-		if (aligned_offset + bytes > capacity) { return res; }
-
-		std::cout << "\nbytes of padding added: " << bytes_of_padding;
-		(*padding) += bytes_of_padding;
-		std::cout << "\naligned offset: " << aligned_offset;
-		void* data = &buffer[aligned_offset];
-		std::cout << "\ndata assigned at: " << aligned_offset;
-		(*offset) = aligned_offset + bytes;
-		std::cout << "\npost allocation offset: " << *offset << "\n";
-
-		res.result = ARENA_RESULT_SUCCESS;
-		res.data = data;
-		return res;
+		return SUNDER_ARENA_RESULT_FAILURE;
 	}
 
-	sunder_arena_result sunder_allocate_arena_internal(u8** buffer, u64* arena_capacity, u64 requested_capacity, u64 buffer_alignment)
+	if (arena_alignment < 2 || !sunder_is_power_of_2(arena_alignment))
 	{
-		if (!sunder_is_even(requested_capacity)) { return ARENA_RESULT_REQUESTED_ARENA_ALLOCATION_SIZE_IS_NOT_EVEN; }
-
-		//(*buffer) = SUNDER_HALLOC(u8, requested_capacity);
-		*buffer = (u8*)sunder_aligned_halloc(requested_capacity, buffer_alignment);
-
-		if (*buffer == NULL) { return ARENA_RESULT_OS_MEMORY_ALLOCATION_FAILURE; }
-		**buffer = {};
-		(*arena_capacity) = requested_capacity;
-
-		return ARENA_RESULT_SUCCESS;
+		return SUNDER_ARENA_RESULT_FAILURE;
 	}
 
-	sunder_arena_result sunder_allocate_arena(sunder_arena_t* arena, u64 bytes, u64 alignment, sunder_arena_type arena_type, u32 chain_count)
+	arena->buffer = (u8*)sunder_aligned_halloc(capacity, arena_alignment);
+
+	if (arena->buffer == nullptr)
 	{
-		arena->type = arena_type;
-
-		if (arena_type == ARENA_TYPE_CHAINED)
-		{
-			arena->chain_count = chain_count;
-		}
-
-		return sunder_allocate_arena_internal(&arena->buffer, &arena->capacity, bytes, alignment);
+		return SUNDER_ARENA_RESULT_OS_MEMORY_ALLOCATION_FAILURE; 
 	}
 
-	sunder_arena_suballocation_result_t sunder_suballocate_from_arena(sunder_arena_t* arena, u64 bytes, u64 alignment)
+	arena->capacity = capacity;
+	arena->offset = 0;
+
+	sunder_initialize_buffer(arena->buffer, arena->capacity, 0, arena->capacity);
+
+	return SUNDER_ARENA_RESULT_SUCCESS;
+}
+
+sunder_arena_suballocation_result_t sunder_suballocate_from_arena(sunder_arena_t* arena, u64 bytes, u32 alignment)
+{
+	return sunder_suballocate_from_arena_internal(arena, bytes, alignment);
+}
+
+sunder_arena_suballocation_result_t sunder_suballocate_from_arena_debug(sunder_arena_t* arena, u64 bytes, u32 alignment)
+{
+	return sunder_suballocate_from_arena_debug_internal(arena, bytes, alignment);
+}
+
+sunder_arena_result sunder_free_arena(sunder_arena_t* arena)
+{
+	if (arena == nullptr) { return SUNDER_ARENA_RESULT_ARENA_UNINITIALIZED; }
+	if (arena->buffer == nullptr) { return SUNDER_ARENA_RESULT_BUFFER_UNINITIALIZED; }
+
+	arena->offset = 0;
+	arena->capacity = 0;
+
+	// later account for chained arena specification
+
+	sunder_aligned_free((void**)&arena->buffer);
+
+	return SUNDER_ARENA_RESULT_SUCCESS;
+}
+
+u64 sunder_get_aligned_struct_allocation_size_debug(const u64* alignment_buffer, const u64* allocation_size_buffer, u64 buffer_size, u64 struct_alignment)
+{
+	u64 offset = 0;
+	u64 aligned_offset = 0;
+	u64 bytes_of_padding = 0;
+
+	for (u64 i = 0; i < buffer_size; i++)
 	{
-		sunder_arena_suballocation_result_t res;
-		res.result = ARENA_RESULT_ARENA_UNINITIALIZED;
-		if (arena == nullptr) { return res; }
-
-		return sunder_suballocate_from_arena_internal(&arena->offset, &arena->total_bytes_of_padding, arena->buffer, arena->capacity, bytes, alignment);
-	}
-
-	sunder_arena_suballocation_result_t sunder_suballocate_from_arena_debug(sunder_arena_t* arena, u64 bytes, u64 alignment)
-	{
-		sunder_arena_suballocation_result_t res;
-		res.result = ARENA_RESULT_ARENA_UNINITIALIZED;
-		if (arena == nullptr) { return res; }
-
-		return sunder_suballocate_from_arena_internal_debug(&arena->offset, &arena->total_bytes_of_padding, arena->buffer, arena->capacity, bytes, alignment);
-	}
-
-	sunder_arena_result sunder_reset_arena(sunder_arena_t* arena)
-	{
-		if (arena == nullptr) { return ARENA_RESULT_ARENA_UNINITIALIZED; }
-
-		arena->offset = 0;
-		arena->total_bytes_of_padding = 0;
-
-		return ARENA_RESULT_SUCCESS;
-	}
-
-	sunder_arena_result sunder_free_arena(sunder_arena_t* arena)
-	{
-		if (arena == nullptr) { return ARENA_RESULT_ARENA_UNINITIALIZED; }
-		if (arena->buffer == nullptr) { return ARENA_RESULT_BUFFER_UNINITIALIZED; }
-
-		sunder_reset_arena(arena);
-		sunder_aligned_ffree((void**)&arena->buffer);
-
-		return ARENA_RESULT_SUCCESS;
-	}
-
-	u64 sunder_get_aligned_struct_allocation_size_debug(u64* alignment_buffer, u64* allocation_size_buffer, u64 buffer_size, u64 struct_alignment)
-	{
-		u64 offset = 0;
-		u64 aligned_offset = 0;
-		u64 bytes_of_padding = 0;
-
-		for (u64 i = 0; i < buffer_size; i++)
-		{
-			SUNDER_LOG("\nrequested alignment: ");
-			SUNDER_LOG(alignment_buffer[i]);
-			aligned_offset = sunder_align64(offset, alignment_buffer[i]);
-			SUNDER_LOG("\nallocating ");
-			SUNDER_LOG(allocation_size_buffer[i]);
-			SUNDER_LOG(" bytes");
-			SUNDER_LOG("\ncurrent offset: ");
-			SUNDER_LOG(offset);
-			SUNDER_LOG("\naligned offset: ");
-			SUNDER_LOG(aligned_offset);
-			bytes_of_padding = aligned_offset - offset;
-			SUNDER_LOG("\nbytes of padding added: ");
-			SUNDER_LOG(bytes_of_padding);
-			offset = aligned_offset + allocation_size_buffer[i];
-			SUNDER_LOG("\npost allocation offset: ");
-			SUNDER_LOG(offset);
-			SUNDER_LOG("\n");
-		}
-
 		SUNDER_LOG("\nrequested alignment: ");
-		SUNDER_LOG(struct_alignment);
+		SUNDER_LOG(alignment_buffer[i]);
+		aligned_offset = sunder_align64(offset, alignment_buffer[i]);
 		SUNDER_LOG("\nallocating ");
-		SUNDER_LOG(0);
+		SUNDER_LOG(allocation_size_buffer[i]);
 		SUNDER_LOG(" bytes");
 		SUNDER_LOG("\ncurrent offset: ");
 		SUNDER_LOG(offset);
-		aligned_offset = sunder_align64(offset, struct_alignment);
 		SUNDER_LOG("\naligned offset: ");
 		SUNDER_LOG(aligned_offset);
 		bytes_of_padding = aligned_offset - offset;
 		SUNDER_LOG("\nbytes of padding added: ");
 		SUNDER_LOG(bytes_of_padding);
-		offset = aligned_offset;
+		offset = aligned_offset + allocation_size_buffer[i];
 		SUNDER_LOG("\npost allocation offset: ");
 		SUNDER_LOG(offset);
 		SUNDER_LOG("\n");
-
-		return offset;
 	}
 
-	u64 sunder_get_aligned_struct_allocation_size(u64* alignment_buffer, u64* allocation_size_buffer, u64 buffer_size, u64 struct_alignment)
-	{
-		u64 offset = 0;
-		u64 aligned_offset = 0;
-		u64 bytes_of_padding = 0;
+	SUNDER_LOG("\nrequested alignment: ");
+	SUNDER_LOG(struct_alignment);
+	SUNDER_LOG("\nallocating ");
+	SUNDER_LOG(0);
+	SUNDER_LOG(" bytes");
+	SUNDER_LOG("\ncurrent offset: ");
+	SUNDER_LOG(offset);
+	aligned_offset = sunder_align64(offset, struct_alignment);
+	SUNDER_LOG("\naligned offset: ");
+	SUNDER_LOG(aligned_offset);
+	bytes_of_padding = aligned_offset - offset;
+	SUNDER_LOG("\nbytes of padding added: ");
+	SUNDER_LOG(bytes_of_padding);
+	offset = aligned_offset;
+	SUNDER_LOG("\npost allocation offset: ");
+	SUNDER_LOG(offset);
+	SUNDER_LOG("\n");
 
-		for (u64 i = 0; i < buffer_size; i++)
-		{
-			aligned_offset = sunder_align64(offset, alignment_buffer[i]);
-			bytes_of_padding = aligned_offset - offset;
-			offset = aligned_offset + allocation_size_buffer[i];
-		}
-		aligned_offset = sunder_align64(offset, struct_alignment);
+	return offset;
+}
+
+u64 sunder_get_aligned_struct_allocation_size(const u64* alignment_buffer, const u64* allocation_size_buffer, u64 buffer_size, u64 struct_alignment)
+{
+	u64 offset = 0;
+	u64 aligned_offset = 0;
+	u64 bytes_of_padding = 0;
+
+	for (u64 i = 0; i < buffer_size; i++)
+	{
+		aligned_offset = sunder_align64(offset, alignment_buffer[i]);
 		bytes_of_padding = aligned_offset - offset;
-		offset = aligned_offset;
-
-		return offset;
+		offset = aligned_offset + allocation_size_buffer[i];
 	}
 
-	u64 sunder_init_buffer(void* ram_buffer, u64 ram_buffer_size, u64 starting_offset, u64 ending_offset)
+	aligned_offset = sunder_align64(offset, struct_alignment);
+	bytes_of_padding = aligned_offset - offset;
+	offset = aligned_offset;
+
+	return offset;
+}
+
+u64 sunder_initialize_buffer(void* buffer, u64 buffer_size, u64 starting_offset, u64 bytes_to_init)
+{
+	if (buffer == nullptr) { return 0; }
+	if (starting_offset + bytes_to_init > buffer_size) { return 0; }
+	if (starting_offset > buffer_size) { return 0; }
+
+	i8* temp_ram_buffer_ptr = (i8*)buffer;
+
+	for (u64 i  = starting_offset; i < bytes_to_init; i++)
 	{
-		if (ram_buffer == nullptr) { return 0; }
-		if (starting_offset + ending_offset > ram_buffer_size) { return 0; }
-		if (starting_offset > ram_buffer_size) { return 0; }
-
-		i8* temp_ram_buffer_ptr = (i8*)ram_buffer;
-
-		for (u64 i  = starting_offset; i < ending_offset; i++)
-		{
-			temp_ram_buffer_ptr[i] = 0;
-		}
-
-		return ending_offset - starting_offset;
+		temp_ram_buffer_ptr[i] = 0;
 	}
-//}
+
+	return bytes_to_init - starting_offset;
+}
+
+u64 sunder_compute_aligned_allocation_size(u64 type_size_in_bytes, u64 element_count, u64 alignment)
+{
+	return sunder_align64(sunder_compute_array_size_in_bytes(type_size_in_bytes, element_count), alignment);
+}
+
+
+u8 sunder_to_bit_mask8(const sunder_bit_index_buffer8_t& storage, u32 count)
+{
+	u8 mask = 0;
+	u8 merged_count = 0;
+	const u16 bit_count = sizeof(u8) * 8;
+
+	SUNDER_TO_BIT_MASK(u8, 1, mask, storage, count, merged_count, bit_count);
+	if (mask == 0) { return UINT8_MAX; }
+	if (merged_count != count) { return UINT8_MAX; }
+
+	return mask;
+}
+
+u16 sunder_to_bit_mask16(const sunder_bit_index_buffer16_t& storage, u32 count)
+{
+	u16 mask = 0;
+	u16 merged_count = 0;
+	const u16 bit_count = sizeof(u16) * 8;
+
+	SUNDER_TO_BIT_MASK(u16, 1, mask, storage, count, merged_count, bit_count);
+	if (mask == 0) { return UINT16_MAX; }
+	if (merged_count != count) { return UINT16_MAX; }
+
+	return mask;
+}
+
+u32 sunder_to_bit_mask32(const sunder_bit_index_buffer32_t& storage, u32 count)
+{
+	u32 mask = 0;
+	u32 merged_count = 0;
+	const u16 bit_count = sizeof(u32) * 8;
+
+	SUNDER_TO_BIT_MASK(u32, 1U, mask, storage, count, merged_count, bit_count);
+	if (mask == 0) { return UINT32_MAX; }
+	if (merged_count != count) { return UINT32_MAX; }
+
+	return mask;
+}
+
+u64 sunder_to_bit_mask64(const sunder_bit_index_buffer64_t& storage, u32 count)
+{
+	u64 mask = 0;
+	u64 merged_count = 0;
+	const u16 bit_count = sizeof(u64) * 8;
+
+	SUNDER_TO_BIT_MASK(u64, 1ULL, mask, storage, count, merged_count, bit_count);
+	if (mask == 0) { return UINT64_MAX; }
+	if (merged_count != count) { return UINT64_MAX; }
+
+	return mask;
+}
+
+SUNDER_IMPLEMENT_EXISTS_FUNCTION(u32, sunder, u32, u32)
+
+void sunder_invoke_function_on_thread_launch(sunder_thread_function_ptr function_ptr, void* args)
+{
+	function_ptr(args);
+}
+
+void sunder_launch_thread(sunder_thread_t* thread, sunder_thread_function_ptr function_ptr, void* args)
+{
+	thread->thread = std::thread(function_ptr, args);
+}
+
+void sunder_join_thread(sunder_thread_t* thread)
+{
+	if (thread->thread.joinable())
+	{
+		thread->thread.join();
+	}
+}
+
+void sunder_detach_thread(sunder_thread_t* thread)
+{
+	thread->thread.detach();
+}
+
+void sunder_sleep_on_current_thread_for(f64 seconds)
+{
+	std::this_thread::sleep_for(std::chrono::duration<f64>(seconds));
+}
+
+sunder_thread_id sunder_get_current_thread_id()
+{
+	return std::this_thread::get_id();
+}
+
+void sunder_initialize_time()
+{
+	sunder_initial_time = std::chrono::steady_clock::now();
+}
+
+f64 sunder_get_elapsed_time_in_seconds()
+{
+	return std::chrono::duration<f64>(std::chrono::steady_clock::now() - sunder_initial_time).count();
+}
+
+SUNDER_IMPLEMENT_CLAMP_FUNCTION(i8);
+SUNDER_IMPLEMENT_CLAMP_FUNCTION(i16);
+SUNDER_IMPLEMENT_CLAMP_FUNCTION(i32);
+SUNDER_IMPLEMENT_CLAMP_FUNCTION(i64);
+
+SUNDER_IMPLEMENT_CLAMP_FUNCTION(u8);
+SUNDER_IMPLEMENT_CLAMP_FUNCTION(u16);
+SUNDER_IMPLEMENT_CLAMP_FUNCTION(u32);
+SUNDER_IMPLEMENT_CLAMP_FUNCTION(u64);
+
+SUNDER_IMPLEMENT_CLAMP_FUNCTION(f32);
+SUNDER_IMPLEMENT_CLAMP_FUNCTION(f64);
+
+bool sunder_compare_strings(cstring_literal* str1, u32 str1_size, cstring_literal* str2, u32 str2_size)
+{
+	if (str1_size != str2_size)
+	{
+		return false;
+	}
+
+	for (u32 i = 0; i < str1_size; i++)
+	{
+		if (str1[i] != str2[i])
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+SUNDER_IMPLEMENT_QUERY_BUFFER_INDEX_FUNCTION(u32, sunder, u32, u32)
+
+SUNDER_IMPLEMENT_QUICK_SORT_PARTITION_FUNCTION(sunder_arena_free_memory_block_t, arena_free_memory_block, sunder)
+SUNDER_IMPLEMENT_QUICK_SORT_FUNCTION(sunder_arena_free_memory_block_t, arena_free_memory_block, sunder)
+
+void sunder_log_string(const sunder_string_t* string)
+{
+	const u32 length = string->length;
+
+	for (u32 i = 0; i < length; i++)
+	{
+		SUNDER_LOG(string->data[i]);
+	}
+}
+
+u64 sunder_update_aligned_value_u64(u64 val, u64 update_val, u32 alignment)
+{
+	u64 local_val = val;
+	local_val += update_val;
+	local_val = sunder_align64(local_val, alignment);
+
+	return local_val;
+}
+
+u32 sunder_update_aligned_value_u32(u32 val, u32 update_val, u32 alignment)
+{
+	u32 local_val = val;
+	local_val += update_val;
+	local_val = sunder_align32(local_val, alignment);
+
+	return local_val;
+}
