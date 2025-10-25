@@ -5,6 +5,9 @@
 #include <thread>
 #include <mutex>
 
+#define SUNDER_INTERNAL static
+#define SUNDER_UNIQUE  inline
+#define SUNDER_PERSISTENT static
 #define SUNDER_TRUE 1
 #define SUNDER_FALSE 0
 #define SUNDER_ERROR_NULLPTR -3
@@ -256,10 +259,7 @@ typedef unsigned int u32;
 typedef unsigned long long u64;
 typedef float f32;
 typedef double f64;
-typedef u8 b8;
-typedef u16 b16;
 typedef u32 b32;
-typedef u64 b64;
 typedef const char cstring_literal;
 typedef char cstring;
 typedef f32 real32;
@@ -458,3 +458,15 @@ SUNDER_DEFINE_QUICK_SORT_FUNCTION(sunder_arena_free_memory_block_t, arena_free_m
 void														sunder_log_string(const sunder_string_t* string);
 u64														sunder_update_aligned_value_u64(u64 val, u64 update_val, u32 alignment);
 u32														sunder_update_aligned_value_u32(u32 val, u32 update_val, u32 alignment);
+u64														sunder_kilobytes_to_bytes(u64 kb);
+u64														sunder_megabytes_to_bytes(u64 mb);
+bool														sunder_valid_index(u32 index, u32 element_count);
+bool														sunder_valid_offset(u64 offset, u64 capacity);
+
+															//	aligns every single element in an array / written pretty much specifically for computing proper allocation size for vram suballocations that need to be treated as separate suballocations (etc. dynamicly offseting into descriptors)
+u64														sunder_compute_aligned_array_allocation_size(u64 type_size_in_bytes, u64 element_count, u32 alignment);
+u64														sunder_accumulate_aligned_allocation_size(const u64* aligned_allocation_size_buffer, u64 element_count, u32 alignment);
+i32														sunder_int_to_string(i64 value, char* result, u32 base);
+i32														sunder_uint_to_string(u64 value, char* result, u32 base);
+i32														sunder_float_to_string(f64 value, char* result, u32 precision, u32 base);
+

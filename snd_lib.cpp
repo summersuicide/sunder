@@ -537,3 +537,163 @@ u32 sunder_update_aligned_value_u32(u32 val, u32 update_val, u32 alignment)
 
 	return local_val;
 }
+
+u64 sunder_kilobytes_to_bytes(u64 kb)
+{
+	return kb * 1024;
+}
+
+u64 sunder_megabytes_to_bytes(u64 mb)
+{
+	return sunder_kilobytes_to_bytes(1024) * mb;
+}
+
+bool sunder_valid_index(u32 index, u32 element_count)
+{
+	return !(index > element_count - 1);
+}
+
+bool sunder_valid_offset(u64 offset, u64 capacity)
+{
+	return !(offset > capacity - 1);
+}
+
+u64 sunder_compute_aligned_array_allocation_size(u64 type_size_in_bytes, u64 element_count, u32 alignment)
+{
+	u64 aligned_allocation_size = 0;
+
+	for (u64 i = 0; i < element_count; i++)
+	{
+		aligned_allocation_size += sunder_align64(type_size_in_bytes, alignment);
+		aligned_allocation_size = sunder_align64(aligned_allocation_size, alignment); // probably obsolete
+	}
+
+	return aligned_allocation_size;
+}
+
+u64 sunder_accumulate_aligned_allocation_size(const u64* aligned_allocation_size_buffer, u64 element_count, u32 alignment)
+{
+	u64 accumulated_allocation_size = 0;
+
+	for (u64 i = 0; i < element_count; i++)
+	{
+		accumulated_allocation_size += aligned_allocation_size_buffer[i];
+		accumulated_allocation_size = sunder_align64(accumulated_allocation_size, alignment);
+	}
+
+	return accumulated_allocation_size;
+}
+
+i32 sunder_int_to_string(i64 value, char* result, u32 base)
+{// check that the base if valid
+	if (base < 2 || base > 36) { *result = '\0'; return -1; }
+
+	i64 original_value = value;
+	char* ptr = result, * ptr1 = result, tmp_char;
+	i64 tmp_value{};
+	i32 length = 0;
+
+	do {
+		tmp_value = value;
+		value /= base;
+		*ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz"[35 + (tmp_value - value * base)];
+		length++;
+	} while (value);
+
+	// Apply negative sign
+	if (original_value < 0)
+	{
+		*ptr++ = '-';
+	}
+
+	*ptr-- = '\0';
+
+	// Reverse the string
+	while (ptr1 < ptr) {
+		tmp_char = *ptr;
+		*ptr-- = *ptr1;
+		*ptr1++ = tmp_char;
+	}
+
+	return length;
+}
+
+i32 sunder_uint_to_string(u64 value, char* result, u32 base)
+{
+	if (base < 2 || base > 36) { *result = '\0'; return -1; }
+
+	char* ptr = result, * ptr1 = result, tmp_char;
+	u64 tmp_value{};
+	i32 length = 0;
+
+	do {
+		tmp_value = value;
+		value /= base;
+		*ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz"[35 + (tmp_value - value * base)];
+		length++;
+	} while (value);
+
+	*ptr-- = '\0';
+
+	// Reverse the string
+	while (ptr1 < ptr) {
+		tmp_char = *ptr;
+		*ptr-- = *ptr1;
+		*ptr1++ = tmp_char;
+	}
+
+	return length;
+}
+
+i32 sunder_float_to_string(f64 value, char* result, u32 precision, u32 base)
+{
+	if (base < 2 || base > 36 || !result) return -1;
+
+	char* ptr = result;
+	i32 length = 0;
+
+	// Handle negative values
+	if (value < 0) {
+		*ptr++ = '-';
+		value = -value;
+		length++;
+	}
+
+	// Extract integer part
+	i64 int_part = (i64)value;
+
+	// Convert integer part using your function
+	i32 int_len = sunder_int_to_string(int_part, ptr, base);
+	if (int_len < 0) return -1; // error from integer conversion
+
+	ptr += int_len;
+	length += int_len;
+
+	// If no precision needed, terminate here
+	if (precision == 0) {
+		*ptr = '\0';
+		return length;
+	}
+
+	*ptr++ = '.';  // add decimal point
+	length++;
+
+	// Extract fractional part
+	f64 frac_part = value - int_part;
+
+	// Convert fractional part
+	for (u32 i = 0; i < precision; i++) {
+		frac_part *= base;
+		i64 digit = (i64)frac_part;
+		// For bases > 10, convert digit to corresponding char
+		if (digit < 10)
+			*ptr++ = '0' + (char)digit;
+		else
+			*ptr++ = 'a' + ((char)digit - 10);
+		frac_part -= digit;
+		length++;
+	}
+
+	*ptr = '\0';
+	return length;
+}
